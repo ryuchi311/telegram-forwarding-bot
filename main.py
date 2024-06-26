@@ -1,9 +1,9 @@
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import logging
 import asyncio
 import time
+from telegram.error import TimedOut, NetworkError
 
 # Replace 'YOUR_TOKEN_HERE' with your bot's token
 TOKEN = 'YOUR_TOKEN_HERE'
@@ -22,6 +22,10 @@ logger = logging.getLogger(__name__)
 last_request_time = {}
 
 async def forward_post(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Only respond to direct private messages
+    if update.message.chat.type != 'private':
+        return
+
     # Check if the user is authorized
     if update.effective_user.username not in AUTHORIZED_USERNAMES:
         await update.message.reply_text('You are not authorized to use this bot for forwarding messages.')
@@ -99,6 +103,9 @@ async def cancel_forward(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await query.edit_message_text(text="Message forwarding cancelled.")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Only respond to direct private messages
+    if update.message.chat.type != 'private':
+        return
     await update.message.reply_text('Welcome! Only authorized users can forward messages using this bot.')
 
 app = ApplicationBuilder().token(TOKEN).build()
