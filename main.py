@@ -1,9 +1,9 @@
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import logging
 import asyncio
 import time
+from telegram.error import TimedOut, NetworkError
 
 # Replace 'YOUR_TOKEN_HERE' with your bot's token
 TOKEN = 'YOUR_TOKEN_HERE'
