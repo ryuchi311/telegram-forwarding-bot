@@ -20,7 +20,7 @@ This Telegram bot allows authorized users to forward messages to specified chann
 
 1. **Clone the repository**:
     ```sh
-    git clone https://github.com/yourusername/telegram-forwarding-bot.git
+    git clone https://github.com/ryuchi311/telegram-forwarding-bot.git
     cd telegram-forwarding-bot
     ```
 
