@@ -55,19 +55,43 @@ async def confirm_forward(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await query.edit_message_text(text="Forwarding message in 30 seconds...")
         await asyncio.sleep(30)
 
+        # Initialize progress reporting
+        progress_message = await query.message.reply_text("Initializing forwarding...")
+        
         error_channels = []
-        for target_channel_id in TARGET_CHANNEL_IDS:
+        success_channels = []
+        total_channels = len(TARGET_CHANNEL_IDS)
+
+        for index, target_channel_id in enumerate(TARGET_CHANNEL_IDS):
             try:
-                # Forward the message to the target channel(s)
-                await context.bot.forward_message(chat_id=target_channel_id, from_chat_id=chat_id, message_id=message_id)
+                # Retry logic for forwarding the message
+                for attempt in range(3):
+                    try:
+                        await context.bot.forward_message(chat_id=target_channel_id, from_chat_id=chat_id, message_id=message_id)
+                        success_channels.append(target_channel_id)
+                        break
+                    except (TimedOut, NetworkError) as e:
+                        logger.warning(f"Attempt {attempt + 1} failed for {target_channel_id}: {e}")
+                        await asyncio.sleep(5)
+                else:
+                    raise Exception(f"Failed to forward message to {target_channel_id} after 3 attempts")
+
             except Exception as e:
                 logger.error(f'Failed to forward message to {target_channel_id}: {e}')
                 error_channels.append(target_channel_id)
+            
+            # Update progress
+            progress = int((index + 1) / total_channels * 100)
+            await progress_message.edit_text(f"Forwarding message: {progress}% completed")
         
+        # Report summary
+        summary_message = "Message forwarding completed.\n"
+        if success_channels:
+            summary_message += f"Successfully forwarded to: {', '.join(success_channels)}\n"
         if error_channels:
-            await query.message.reply_text(f'Failed to forward message to the following channels: {", ".join(error_channels)}')
-        else:
-            await query.message.reply_text('Message forwarded successfully!')
+            summary_message += f"Failed to forward to: {', '.join(error_channels)}"
+        
+        await progress_message.edit_text(summary_message)
 
 async def cancel_forward(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
